@@ -32,16 +32,23 @@ from controlers import printer
 
 # Main web app
 app = Bottle()
-
+config_from_gui = False
 # Init logger
 logger = logging.getLogger(__name__)
 
+
+def set_config_from_gui():
+    global config_from_gui
+    config_from_gui = True
+
+def get_config_from_gui():
+    return config_from_gui
 
 # Helper function to actually print the receipt
 def do_print(receipt):
     logger.info('Print receipt %s', str(receipt))
     try:
-        device = printer.device()
+        device = printer.device(config_from_gui=config_from_gui)
         device.print_receipt(receipt)
     except (SystemExit, KeyboardInterrupt):
         raise
@@ -172,7 +179,7 @@ def open_cashbox():
     """
     logger.info('open_cashbox')
     try:
-        device = printer.device()
+        device = printer.device(config_from_gui=config_from_gui)
         device.open_cashbox()
     except (SystemExit, KeyboardInterrupt):
         raise

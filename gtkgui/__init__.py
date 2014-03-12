@@ -11,14 +11,18 @@ from os.path import expanduser
 import WConfig
 
 default_config = """[General]
-url = localhost
+host = localhost
 port = 8069
 [Printer]
 type = USB
 idVendor = 0x0416
 idDevice = 0x5011
-url = 192.168.1.2
+host = 192.168.1.2
 dev = /dev/ttyS0
+WidthA = 44
+widthB = 34
+pxWidth = 206
+charSet = \\x1b\\x52\\x12
 """
 
 class SystrayIconApp:
@@ -88,7 +92,7 @@ class SystrayIconApp:
             self.server_label = 'Start'
 
     def configure_form(self,widget):
-        WConfig.run(self.server)
+        WConfig.run()
 
     def reprint_ticket(self,widget):
         pass

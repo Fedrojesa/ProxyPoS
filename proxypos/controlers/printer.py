@@ -25,8 +25,13 @@
 ##############################################################################
 
 import os
+from os.path import expanduser
+
+import sys
 import yaml
 import logging
+
+import ConfigParser
 
 from escpos import printer
 
@@ -38,37 +43,58 @@ class device:
     def __init__(
         self,
         default_path='config/printer.yaml',
-        env_key='LOG_CFG'
+        env_key='LOG_CFG',
+        config_from_gui = False
     ):
         """Setup printer configuration
     
         """
-        path = default_path
-        value = os.getenv(env_key, None)
-        if value:
-            path = value
-        if os.path.exists(path):
-            with open(path, 'rt') as f:
-                self.config = yaml.load(f.read())
-            # Init printer
-            ptype = self.config['printer']['type'].lower()
-            settings = self.config['printer']['settings']
-            if ptype == 'usb':
-                self.printer = printer.Usb(settings['idVendor'], settings['idProduct'])
-            elif ptype == 'serial':
-                self.printer = printer.Serial(settings['devfile'])
-            elif ptype == 'network':
-                self.printer = printer.Network(settings['host'])
-            # Assign other default values
-            self.printer.pxWidth = settings['pxWidth']
-            # Set default widh with normal value
-            self.printer.width = self.printer.widthA = settings['WidthA']
-            self.printer.widthB = settings['WidthB']
-            # Set correc table character
-            self.printer._raw(settings['charSet'])
+        if config_from_gui == False:
+            path = default_path
+            value = os.getenv(env_key, None)
+            if value:
+                path = value
+            if os.path.exists(path):
+                with open(path, 'rt') as f:
+                    self.config = yaml.load(f.read())
+            else:
+                logger.critical('Could not read printer configuration')
+                sys.exit()
         else:
-            logger.critical('Could not read printer configuration')
+            config_file = expanduser("~") +"/.proxypos/config/config.cfg"
+            config = ConfigParser.RawConfigParser()
+            config.read(config_file)
+            self.config= {}
+            self.config['printer'] = {}
+            self.config['printer']['type'] = config.get('Printer','type')
+            self.config['printer']['settings'] = {}
+            self.config['printer']['settings']['idVendor'] = int(config.get('Printer','idVendor'),16)
+            self.config['printer']['settings']['idProduct'] = int(config.get('Printer','idDevice'),16)
+            self.config['printer']['settings']['devfile'] = config.get('Printer','dev')
+            self.config['printer']['settings']['host'] = config.get('Printer','host')
+            self.config['printer']['settings']['WidthA'] = config.getint('Printer','WidthA')
+            self.config['printer']['settings']['WidthB'] = config.getint('Printer','WidthB')
+            self.config['printer']['settings']['pxWidth'] = config.getint('Printer','pxWidth')
+            #TODO: Fix charSet
+            self.config['printer']['settings']['charSet'] = config.get('Printer','charSet')
 
+        # Init printer
+        ptype = self.config['printer']['type'].lower()
+        settings = self.config['printer']['settings']
+        if ptype == 'usb':
+            self.printer = printer.Usb(settings['idVendor'], settings['idProduct'])
+        elif ptype == 'serial':
+            self.printer = printer.Serial(settings['devfile'])
+        elif ptype == 'network':
+            self.printer = printer.Network(settings['host'])
+        # Assign other default values
+        self.printer.pxWidth = settings['pxWidth']
+        # Set default widh with normal value
+        self.printer.width = self.printer.widthA = settings['WidthA']
+        self.printer.widthB = settings['WidthB']
+        # Set correc table character
+        self.printer._raw('\x1b\x52\x12')
+        #self.printer._raw(settings['charSet'])
 
     def open_cashbox(self):
         self.printer.cashdraw(2)
@@ -87,14 +113,13 @@ class device:
         date = self._format_date(receipt['date'])
         self._bold(False)
         self._font('a')
-        self._lineFeed(1)
-        self._write(date, None, 'right')
-        self._lineFeed(1)
-        self._write(receipt['name'] + '\n', '', 'right')
-
+        #self._lineFeed(1)
+        self._write("\n"+date+"\n", None, 'left')
+        #self._lineFeed(1)
+        self._write(receipt['name'] + '\n', '', 'left')
         self._write(receipt['company']['name'] + '\n')
         self._write('RFC: ' + str(receipt['company']['company_registry']) + '\n')
-        self._write(str(receipt['company']['contact_address']) + '\n')
+        #self._write(str(receipt['company']['contact_address']) + '\n')
         self._write('Telefono: ' + str(receipt['company']['phone']) + '\n')
         self._write('Cajero: ' + str(receipt['cashier']) + '\n')
         # self._write('Tienda: ' + receipt['store']['name'])
@@ -113,7 +138,7 @@ class device:
         self._write('IVA:', self._decimal(receipt['total_tax']) + '\n')
         self._write('Descuento:', self._decimal(receipt['total_discount']) + '\n')
         self._bold(True)
-        self._font('b')
+        #self._font('a')
         self._write('TOTAL:', '$' + self._decimal(receipt['total_with_tax']) + '\n')
 
         # Set space for display payment methods
@@ -123,10 +148,10 @@ class device:
         paymentlines = receipt['paymentlines']
         if paymentlines:
             for payment in paymentlines:
-                self._write(payment['journal'], self._decimal(payment['amount']))
+                self._write(payment['journal'], self._decimal(payment['amount'])+'\n')
 
             self._bold(True)
-            self._write('Cambio:', '$ ' + self._decimal(receipt['change']))
+            self._write('Cambio:', '$ ' + self._decimal(receipt['change'])+'\n')
             self._bold(False)
 
         # Write customer data
@@ -141,7 +166,11 @@ class device:
             self._lineFeed(1)
 
         # Footer space
-        self._write('GRACIAS POR SU COMPRA', '', 'center')
+        self._write('Recibo sin validez fiscal.\n', '', 'left')
+        self._write('Si requiere factura, solicitarla dentro de los proximos 5 dias','','left')
+        self._write('\n'+str(receipt['company']['website'])+'\n','','left')
+        self._write('\n'+str(receipt['company']['email'])+'\n','','left')
+        self.printer.barcode(receipt['name'][6:],'EAN13',64,2,'BELOW','A')
         self._lineFeedCut(1, True)
 
 
