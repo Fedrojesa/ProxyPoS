@@ -27,7 +27,7 @@
 import logging
 import simplejson as json
 
-from bottle import Bottle, request
+from bottle import Bottle, ServerAdapter, request
 from controlers import printer
 
 # Main web app

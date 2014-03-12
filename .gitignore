@@ -49,3 +49,5 @@ Thumbs.db
 .project
 .pydevproject
 *.pyc
+*~
+.*.sw?
