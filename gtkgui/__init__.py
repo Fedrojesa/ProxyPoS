@@ -1,16 +1,39 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import os
 import gtk
 import multiprocessing
 import signal
+import ConfigParser
+import io
+from os.path import expanduser
 import WConfig
+
+default_config = """[General]
+url = localhost
+port = 8069
+[Printer]
+type = USB
+idVendor = 0x0416
+idDevice = 0x5011
+url = 192.168.1.2
+dev = /dev/ttyS0
+"""
 
 class SystrayIconApp:
     proxypos_process = None
     server = None
     server_label = 'Start'
     def __init__(self,handler):
+        #Check for config file
+        config_path = expanduser("~") +"/.proxypos/config"
+        if not os.path.exists(config_path):
+            os.makedirs(config_path)
+            configfile = open(config_path+'/config.cfg','wb')
+            configfile.write(default_config)
+            configfile.close()
+
         self.server = handler.Server()
         self.tray = gtk.StatusIcon()
         self.tray.set_from_stock(gtk.STOCK_ABOUT)
@@ -31,7 +54,12 @@ class SystrayIconApp:
         config = gtk.MenuItem('Configure')
         config.show()
         menu.append(config)
-        self.config.connect('activate',self.configure_form)
+        config.connect('activate',self.configure_form)
+        
+        config = gtk.MenuItem('Reprint ticket')
+        config.show()
+        menu.append(config)
+        config.connect('activate',self.reprint_ticket)
 
         about = gtk.MenuItem('About')
         about.show()
@@ -62,6 +90,9 @@ class SystrayIconApp:
     def configure_form(self,widget):
         WConfig.run(self.server)
 
+    def reprint_ticket(self,widget):
+        pass
+
     def show_about_dialog(self, widget):
         about_dialog = gtk.AboutDialog()
 	about_dialog.set_destroy_with_parent (True)
@@ -69,7 +100,7 @@ class SystrayIconApp:
 	about_dialog.set_name('ProxyPoS GUI')
 	about_dialog.set_version('0.1')
 	about_dialog.set_copyright("(C) 2014 Alejandro Armagnac")
-	about_dialog.set_comments(("Program to demonstrate a system tray icon"))
+	about_dialog.set_comments(("GUI for ProxyPoS to configure\nyour ESC/POS printer to be used in\nOpenERP"))
 	about_dialog.set_authors(['Alejandro Armagnac <aarmagnac@yahoo.com.mx>'])
 	about_dialog.run()
 	about_dialog.destroy()
