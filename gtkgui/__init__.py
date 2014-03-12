@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import os
+import sys
+sys.path.append("..")
 import gtk
 import multiprocessing
 import signal
@@ -9,6 +11,10 @@ import ConfigParser
 import io
 from os.path import expanduser
 import WConfig
+import logging
+
+# Init logger
+logger = logging.getLogger(__name__)
 
 default_config = """[General]
 host = localhost
@@ -60,10 +66,15 @@ class SystrayIconApp:
         menu.append(config)
         config.connect('activate',self.configure_form)
         
-        config = gtk.MenuItem('Reprint ticket')
-        config.show()
-        menu.append(config)
-        config.connect('activate',self.reprint_ticket)
+        reprint = gtk.MenuItem('Reprint ticket')
+        reprint.show()
+        menu.append(reprint)
+        reprint.connect('activate',self.reprint_ticket)
+
+        cashbox = gtk.MenuItem('Open CashBox')
+        cashbox.show()
+        menu.append(cashbox)
+        cashbox.connect('activate',self.open_cashbox)
 
         about = gtk.MenuItem('About')
         about.show()
@@ -94,8 +105,27 @@ class SystrayIconApp:
     def configure_form(self,widget):
         WConfig.run()
 
+    def open_cashbox(self,widget):
+        from proxypos.controlers import printer
+        logger.info('Opening cashbox')
+        try:
+            device = printer.device(config_from_gui=True)
+            device.open_cashbox()
+        except (SystemExit, KeyboardInterrupt):
+            raise
+        except Exception, ex:
+            logger.error('Failed to open cashbox', exc_info=True)
+
     def reprint_ticket(self,widget):
-        pass
+        from proxypos.controlers import printer
+        logger.info('Reprint receipt')
+        try:
+            device = printer.device(config_from_gui=True)
+            device.print_receipt(None,last=True)
+        except (SystemExit, KeyboardInterrupt):
+            raise
+        except Exception, ex:
+            logger.error('Failed to print receipt', exc_info=True)
 
     def show_about_dialog(self, widget):
         about_dialog = gtk.AboutDialog()

@@ -32,6 +32,7 @@ import yaml
 import logging
 
 import ConfigParser
+from copy import deepcopy
 
 from escpos import printer
 
@@ -100,10 +101,24 @@ class device:
         self.printer.cashdraw(2)
 
 
-    def print_receipt(self, receipt):
+    def print_receipt(self, receipt,last=False):
         """ Function used for print the recipt, currently is the only
         place where you can customize your printout.
         """
+
+        #TODO: Use a sqlite DB or use oerplib to access to the last
+        #      receipt.
+
+        last_receipt_file = expanduser("~") +"/.proxypos/config/last_receipt"
+        if last==True:
+            if not os.path.exists(last_receipt_file):
+                logger.error("No last receipt found")
+            else:
+                receipt = eval(open(last_receipt_file,'rb').read())
+        else:
+            with open(last_receipt_file,'wb') as last_receipt:
+                last_receipt.write(str(receipt))
+
         path = os.path.dirname(__file__)
 
         filename = path + '/logo.jpg'
