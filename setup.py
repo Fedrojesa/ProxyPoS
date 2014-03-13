@@ -6,11 +6,11 @@ packages, data_files = {},[]
 root_dir = os.path.dirname(__file__)
 if root_dir != "":
     os.chdir(root_dir)
-vhd_tb_dir = "proxypos"
+proxypos_dir = "proxypos"
 
-for dirpath, dirnames, filenames in os.walk(vhd_tb_dir):
+for dirpath, dirnames, filenames in os.walk(proxypos_dir):
     if "__init__.py" in filenames:
-        if dirpath == vhd_tb_dir:
+        if dirpath == proxypos_dir:
             packages[dirpath] = "."
         else:
             packages[dirpath.replace("/",".")] = "./"+dirpath
