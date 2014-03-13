@@ -1,5 +1,7 @@
 include README.md
 include CHANGELOG.md
+include LICENSE
+include VERSION
 recursive-include proxypos/config *
 recursive-include proxypos/init *
 recursive-include proxypos/proxypos/controlers *
