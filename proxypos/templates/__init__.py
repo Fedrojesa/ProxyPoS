@@ -98,6 +98,6 @@ def gen_receipt(template_name,receipt,paths):
         template_types[template_type](template_name,base_path,receipt)
 
 if __name__ == "__main__":
-    paths = [os.path.dirname(os.path.abspath(__file__)),]
-    get_templates(os.path.dirname(os.path.abspath(__file__)))
+    paths = [os.path.dirname(os.path.abspath(__file__))+"/templates",]
+    #get_templates(os.path.dirname(os.path.abspath(__file__)))
     gen_receipt('default',test_rec,paths)
