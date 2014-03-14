@@ -1,7 +1,108 @@
 import os
+import sys
+sys.path.append("..")
+
+import templates
+from templates import get_templates
 import gtk
 import ConfigParser
 from os.path import expanduser
+
+
+class POSTicketWidget(gtk.VBox):
+    label = 'Ticket'
+    current_format = 'image'
+    current_template = 'default'
+    config = None
+    templates = None
+    def __init__(self,config):
+        self.config = config
+        self.current_format = config.get('Ticket','templateType')
+
+        gtk.VBox.__init__(self)
+
+        TicketFormatBox = gtk.HBox()
+        button = gtk.RadioButton(None,"image")
+        button.connect('toggled',self.toggled,"image")
+        if self.current_format == "image":
+            button.set_active(True)
+            self.current_template=config.get('Ticket','templateImage')
+            self.templates = get_templates(os.path.dirname(templates.__file__),
+                                           ['image'],True)
+        TicketFormatBox.pack_start(button,0,0,5)
+        
+        button = gtk.RadioButton(button,"text")
+        button.connect('toggled',self.toggled,'text')
+        if self.current_format == "text":
+            button.set_active(True)
+            self.current_template=config.get('Ticket','templateText')
+            self.templates = get_templates(os.path.dirname(templates.__file__),
+                                           ['text'],True)
+
+        TicketFormatBox.pack_start(button,0,0,5)
+        self.pack_start(TicketFormatBox,0,0,5)
+
+        TicketTemplateBox = gtk.VBox()
+        lblName = gtk.Label("Template")
+        buff = gtk.TextBuffer()
+        self.__cmbTemplate = gtk.combo_box_new_text()
+        for i,name in enumerate(list(self.templates)):
+            width = self.templates[name]['width']
+            self.__cmbTemplate.insert_text(i,"%s:%s px"%(name,width))
+            if name == self.current_template:
+                self.__cmbTemplate.set_active(i)
+                buff.set_text(self.templates[name]['description'])
+
+        self.__cmbTemplate.connect('changed',self.changed_cb)
+
+        self.__txwDescription = gtk.TextView(buff)
+        TicketTemplateBox.pack_start(lblName,0,0,5)
+        TicketTemplateBox.pack_start(self.__cmbTemplate,0,0,5)
+        TicketTemplateBox.pack_start(self.__txwDescription,0,0,5)
+        self.pack_start(TicketTemplateBox,0,0,5)
+
+
+    def changed_cb(self,widget):
+        name = widget.get_active_text().split(":")[0]
+        self.current_template = name
+        description = self.templates[name]['description']
+        buff = gtk.TextBuffer()
+        buff.set_text(description)
+        self.__txwDescription.set_buffer(buff)
+
+    def toggled(self,widget, data=None):       
+        if widget.get_active() == True:
+            current_format = data
+            self.current_format = data
+            if current_format == "image":
+                self.templates = get_templates(os.path.dirname(templates.__file__),
+                                               ['image'],True)
+                self.current_template = self.config.get('Ticket','templateImage')
+            elif current_format == "text":
+                self.templates = get_templates(os.path.dirname(templates.__file__),
+                                               ['text'],True)
+                self.current_template = self.config.get('Ticket','templateText')
+            buff = gtk.TextBuffer()
+            self.__cmbTemplate.get_model().clear()
+            for i,name in enumerate(list(self.templates)):
+                width = self.templates[name]['width']
+                self.__cmbTemplate.insert_text(i,"%s:%s px"%(name,width))
+                if name == self.current_template:
+                    self.__cmbTemplate.set_active(i)
+                    buff.set_text(self.templates[name]['description'])
+                    self.__txwDescription.set_buffer(buff)
+
+    def save(self):
+        settings = {}
+        settings['templateType'] = self.current_format
+        if self.current_format == 'image':
+            settings['templateImage'] = self.current_template
+            settings['templateText'] = self.config.get('Ticket','templateText')
+        else:
+            settings['templateText'] = self.current_template
+            settings['templateImage'] = self.config.get('Ticket','templateImage')
+
+        return settings
 
 class GeneralWidget(gtk.HBox):
     label = 'General'
@@ -126,6 +227,7 @@ class PrinterWidget(gtk.VBox):
 
 pages ={ 'General': GeneralWidget,
          'Printer': PrinterWidget,
+         'Ticket': POSTicketWidget,
        }
 
 class WConfig(gtk.Window):
@@ -151,7 +253,7 @@ class WConfig(gtk.Window):
         config = ConfigParser.RawConfigParser()
         config.read(self.config_path +"/config.cfg")
 
-        for page in ['General','Printer']:
+        for page in ['General','Printer','Ticket']:
             widget = pages[page](config)
             label = gtk.Label(widget.label)
             self.widgets[page] = widget
@@ -167,7 +269,8 @@ class WConfig(gtk.Window):
         filename = self.config_path+"/config.cfg"
         new_config.add_section('General')
         new_config.add_section('Printer')
-        for section in ['General','Printer']:
+        new_config.add_section('Ticket')
+        for section in ['General','Printer','Ticket']:
             settings = self.widgets[section].save()
             for setting in settings:
                 print section, setting, settings[setting]

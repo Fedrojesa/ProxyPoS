@@ -29,6 +29,9 @@ WidthA = 44
 widthB = 34
 pxWidth = 206
 charSet = \\x1b\\x52\\x12
+templateType = image
+templateImage = default
+templateText = default
 """
 
 class SystrayIconApp:
@@ -38,8 +41,10 @@ class SystrayIconApp:
     def __init__(self,handler):
         #Check for config file
         config_path = expanduser("~") +"/.proxypos/config"
+        temp_path = expanduser("~")+"/.proxypos/tmp"
         if not os.path.exists(config_path):
             os.makedirs(config_path)
+            os.makedirs(temp_path)
             configfile = open(config_path+'/config.cfg','wb')
             configfile.write(default_config)
             configfile.close()

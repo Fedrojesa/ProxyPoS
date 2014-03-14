@@ -58,6 +58,8 @@ class device:
             if os.path.exists(path):
                 with open(path, 'rt') as f:
                     self.config = yaml.load(f.read())
+                    self.config['ticket'] = {}
+                    self.config['ticket']['template_type'] = 'text'
             else:
                 logger.critical('Could not read printer configuration')
                 sys.exit()
@@ -78,6 +80,7 @@ class device:
             self.config['printer']['settings']['pxWidth'] = config.getint('Printer','pxWidth')
             #TODO: Fix charSet
             self.config['printer']['settings']['charSet'] = config.get('Printer','charSet')
+            self.config['ticket']['template_type'] = config.get('Ticket','templateType')
 
         # Init printer
         ptype = self.config['printer']['type'].lower()

@@ -5,3 +5,4 @@ include VERSION
 recursive-include proxypos/config *
 recursive-include proxypos/init *
 recursive-include proxypos/proxypos/controlers *
+recursive-include proxypos/templates *
