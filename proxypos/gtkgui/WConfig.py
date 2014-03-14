@@ -2,12 +2,15 @@ import os
 import sys
 sys.path.append("..")
 
-import templates
-from templates import get_templates
+#import templates
+#from templates import get_templates
+
 import gtk
 import ConfigParser
 from os.path import expanduser
 
+from proxypos import templates
+from proxypos.templates import get_templates
 
 class POSTicketWidget(gtk.VBox):
     label = 'Ticket'
@@ -27,7 +30,7 @@ class POSTicketWidget(gtk.VBox):
         if self.current_format == "image":
             button.set_active(True)
             self.current_template=config.get('Ticket','templateImage')
-            self.templates = get_templates(os.path.dirname(templates.__file__),
+            self.templates = get_templates(os.path.dirname(templates.__file__)+"/templates",
                                            ['image'],True)
         TicketFormatBox.pack_start(button,0,0,5)
         
@@ -36,7 +39,7 @@ class POSTicketWidget(gtk.VBox):
         if self.current_format == "text":
             button.set_active(True)
             self.current_template=config.get('Ticket','templateText')
-            self.templates = get_templates(os.path.dirname(templates.__file__),
+            self.templates = get_templates(os.path.dirname(templates.__file__)+"/templates",
                                            ['text'],True)
 
         TicketFormatBox.pack_start(button,0,0,5)
@@ -75,11 +78,11 @@ class POSTicketWidget(gtk.VBox):
             current_format = data
             self.current_format = data
             if current_format == "image":
-                self.templates = get_templates(os.path.dirname(templates.__file__),
+                self.templates = get_templates(os.path.dirname(templates.__file__)+"/templates",
                                                ['image'],True)
                 self.current_template = self.config.get('Ticket','templateImage')
             elif current_format == "text":
-                self.templates = get_templates(os.path.dirname(templates.__file__),
+                self.templates = get_templates(os.path.dirname(templates.__file__)+"/templates",
                                                ['text'],True)
                 self.current_template = self.config.get('Ticket','templateText')
             buff = gtk.TextBuffer()
@@ -280,12 +283,12 @@ class WConfig(gtk.Window):
         try:
             with open(filename,'wb') as configfile:
                 new_config.write(configfile)
-            gtk.main_quit()
+            self.destroy()
         except Exception, ex:
             print ex
 
     def cancel(self, widget):
-        gtk.main_quit()
+        self.destroy()
 
 def run():
     w = WConfig()

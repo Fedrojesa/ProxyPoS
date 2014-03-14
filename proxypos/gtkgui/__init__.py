@@ -10,8 +10,10 @@ import signal
 import ConfigParser
 import io
 from os.path import expanduser
-import WConfig
 import logging
+
+from proxypos.gtkgui import WConfig
+#import WConfig
 
 # Init logger
 logger = logging.getLogger(__name__)

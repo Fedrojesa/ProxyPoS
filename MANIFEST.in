@@ -4,5 +4,5 @@ include LICENSE
 include VERSION
 recursive-include proxypos/config *
 recursive-include proxypos/init *
-recursive-include proxypos/proxypos/controlers *
-recursive-include proxypos/templates *
+recursive-include proxypos/proxypos_core/controlers/logo *
+recursive-include proxypos/templates/templates *
