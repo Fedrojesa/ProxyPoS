@@ -31,6 +31,7 @@ WidthA = 44
 widthB = 34
 pxWidth = 206
 charSet = \\x1b\\x52\\x12
+[Ticket]
 templateType = image
 templateImage = default
 templateText = default_text
@@ -45,10 +46,11 @@ class SystrayIconApp:
         config_path = expanduser("~") +"/.proxypos/config"
         temp_path = expanduser("~")+"/.proxypos/tmp"
         template_path = expanduser("~")+"/.proxypos/templates"
-        if not os.path.exists(config_path):
+        paths_exists = [os.path.exists(path) for path in [config_path,temp_path,template_path]]
+        if sum(paths_exists) < 3:
             os.makedirs(config_path)
             os.makedirs(temp_path)
-            os,makedirs(template_path)
+            os.makedirs(template_path)
             configfile = open(config_path+'/config.cfg','wb')
             configfile.write(default_config)
             configfile.close()
