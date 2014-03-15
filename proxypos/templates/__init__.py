@@ -2,11 +2,11 @@ import os
 from os.path import expanduser
 import sys
 import json
-
+from jinja2 import Template
 import re
-import commands
+from proxypos.templates import commands
 
-from test import test_rec
+#from test import test_rec
 
 mapping = {"order_name":lambda r: r['name'],
            "total_tax": lambda r: r['total_tax'],
@@ -23,15 +23,29 @@ mapping = {"order_name":lambda r: r['name'],
            "client": lambda r: r['client'],
            "currency": lambda r: r['currency'],
            "total_discount": lambda r: r['total_discount'],
+           "total_without_tax": lambda r: r['total_without_tax'],
            "invoice_id": lambda r: r['invoice_id'],
            "date": lambda r: r['date'],
            "total_paid": lambda r: r['total_paid'],
+           "paymentlines": lambda r: r['paymentlines'],
            "payment_amount": lambda r: r['paymentlines'][0]['amount'],
            "payment_journal": lambda r: r['paymentlines'][0]['journal'],
            "total_with_tax": lambda r: r["total_with_tax"],
            "subtotal": lambda r: r['subtotal'],
            "change": lambda r: r['change'],
           }
+
+txt_function_mapping = {
+    'image': lambda printer: printer._printImgFromFile,
+    'font': lambda printer: printer._font,
+    'bold': lambda printer: printer._bold,
+    'linefeed': lambda printer: printer._lineFeed,
+    'write': lambda printer: printer._write,
+    'formatdate': lambda printer: printer._format_date,
+    'cut':lambda printer: printer._lineFeedCut,
+    'decimal': lambda printer: printer._decimal,
+    'barcode': lambda printer: printer.printer.barcode,
+}
 
 def find_templates(path):
     try:
@@ -40,7 +54,7 @@ def find_templates(path):
     except OSError:
         return []
 
-def html_template(template_name,base_path,receipt):
+def html_template(printer,template_name,base_path,receipt):
     temporal_path = os.path.join(expanduser("~"),".proxypos/tmp")
     config = json.loads(open(os.path.join(base_path,template_name+".tmp")).read())
     template_path = os.path.join(base_path,config['path'])
@@ -65,10 +79,25 @@ def html_template(template_name,base_path,receipt):
     except OSError:
         print "Error: Cannot write to ticket.html"
 
-    
+def text_template(printer,template_name,base_path,receipt):
+    config = json.loads(open(os.path.join(base_path,template_name+".tmp")).read())
+    template_path = os.path.join(base_path,config['path'])
+    template = open(os.path.join(template_path,config['files']['template'])).read()
+    logo = os.path.join(template_path,config['files']['logo'])
+    if logo != "":
+        logo = "{{image('"+logo+"')}}"
 
-def text_template(template_name,receipt):
-    pass
+    template = template.replace("logo",logo)
+    tmp = Template(template)
+    #Make visible mapping functions inside the jinja2 templates
+    for func in mapping:
+        tmp.globals[func] = mapping[func](receipt)
+    for func in txt_function_mapping:
+        tmp.globals[func] = txt_function_mapping[func](printer)
+    tmp.globals['str'] = str
+    #Print the ticket
+    tmp.render()
+
 
 template_types = {'image': html_template,
                   'text': text_template,
@@ -89,15 +118,25 @@ def get_templates(path,types=['image','text'],full=False):
 
     return _templates
 
-def gen_receipt(template_name,receipt,paths):
+def gen_receipt(printer,template_name,receipt,paths):
     templates = {}
     for path in paths:
         templates.update(get_templates(path))
     if template_name in list(templates):
         template_type,base_path,_ = templates[template_name]
-        template_types[template_type](template_name,base_path,receipt)
+        template_types[template_type](printer,template_name,base_path,receipt)
 
 if __name__ == "__main__":
-    paths = [os.path.dirname(os.path.abspath(__file__))+"/templates",]
+    #paths = [os.path.dirname(os.path.abspath(__file__))+"/templates",]
     #get_templates(os.path.dirname(os.path.abspath(__file__)))
-    gen_receipt('default',test_rec,paths)
+    #gen_receipt('default',test_rec,paths)
+    from proxypos.proxypos_core.controlers import printer
+    dev = printer.device(config_from_gui=True)
+    tmp = Template(open('test.txt').read())
+    for func in mapping:
+        tmp.globals[func] = mapping[func](test_rec)
+    for func in txt_function_mapping:
+        tmp.globals[func] = txt_function_mapping[func](dev)
+    tmp.globals['str'] = str
+
+    tmp.render()

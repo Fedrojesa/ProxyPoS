@@ -30,8 +30,7 @@ class POSTicketWidget(gtk.VBox):
         if self.current_format == "image":
             button.set_active(True)
             self.current_template=config.get('Ticket','templateImage')
-            self.templates = get_templates(os.path.dirname(templates.__file__)+"/templates",
-                                           ['image'],True)
+            self.templates = self._return_templates(['image'])
         TicketFormatBox.pack_start(button,0,0,5)
         
         button = gtk.RadioButton(button,"text")
@@ -39,8 +38,7 @@ class POSTicketWidget(gtk.VBox):
         if self.current_format == "text":
             button.set_active(True)
             self.current_template=config.get('Ticket','templateText')
-            self.templates = get_templates(os.path.dirname(templates.__file__)+"/templates",
-                                           ['text'],True)
+            self.templates = self._return_templates(['text'])
 
         TicketFormatBox.pack_start(button,0,0,5)
         self.pack_start(TicketFormatBox,0,0,5)
@@ -65,6 +63,18 @@ class POSTicketWidget(gtk.VBox):
         self.pack_start(TicketTemplateBox,0,0,5)
 
 
+    def _return_templates(self,ttypes):
+        #Default paths
+        paths = [os.path.dirname(os.path.abspath(templates.__file__))+"/templates",
+                 os.path.join(expanduser("~"),".proxypos/templates")]
+
+        temp = {}
+        for path in paths:
+            temp.update(get_templates(path,ttypes,True))
+
+        return temp
+
+
     def changed_cb(self,widget):
         name = widget.get_active_text().split(":")[0]
         self.current_template = name
@@ -78,14 +88,13 @@ class POSTicketWidget(gtk.VBox):
             current_format = data
             self.current_format = data
             if current_format == "image":
-                self.templates = get_templates(os.path.dirname(templates.__file__)+"/templates",
-                                               ['image'],True)
+                self.templates = self._return_templates(['image'])
                 self.current_template = self.config.get('Ticket','templateImage')
             elif current_format == "text":
-                self.templates = get_templates(os.path.dirname(templates.__file__)+"/templates",
-                                               ['text'],True)
+                self.templates = self.templates = self._return_templates(['text'])
                 self.current_template = self.config.get('Ticket','templateText')
             buff = gtk.TextBuffer()
+            print self.__cmbTemplate
             self.__cmbTemplate.get_model().clear()
             for i,name in enumerate(list(self.templates)):
                 width = self.templates[name]['width']

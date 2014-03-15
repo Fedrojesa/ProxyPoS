@@ -113,7 +113,7 @@ class SystrayIconApp:
         WConfig.run()
 
     def open_cashbox(self,widget):
-        from proxypos.controlers import printer
+        from proxypos.proxypos_core.controlers import printer
         logger.info('Opening cashbox')
         try:
             device = printer.device(config_from_gui=True)
@@ -124,7 +124,7 @@ class SystrayIconApp:
             logger.error('Failed to open cashbox', exc_info=True)
 
     def reprint_ticket(self,widget):
-        from proxypos.controlers import printer
+        from proxypos.proxypos_core.controlers import printer
         logger.info('Reprint receipt')
         try:
             device = printer.device(config_from_gui=True)

@@ -1,0 +1,17 @@
+{
+    "name": "default_text",
+    "type": "text",
+    "description":"Default Template for text type template",
+    "path": "default_text",
+    "files": {
+        "template":"default_text",
+        "logo":"logo.jpg"
+    },
+    "width":"206",
+    "format":"jinja2",
+    "author" :{
+        "name":"Alejandro Armagnac",
+        "email": "aarmagnac@yahoo.com.mx",
+        "web": "some_web"
+    }
+}
