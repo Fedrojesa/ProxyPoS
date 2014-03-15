@@ -5,7 +5,8 @@
     "path": "default",
     "files": {
         "css":"style.css",
-        "template":"default.html"
+        "template":"default.html",
+        "logo":"logo.jpg"
     },
     "width":"420",
     "format":"html",

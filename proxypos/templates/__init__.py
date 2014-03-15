@@ -54,15 +54,19 @@ def find_templates(path):
     except OSError:
         return []
 
-def html_template(printer,template_name,base_path,receipt):
+def html_template_obs(printer,template_name,base_path,receipt):
     temporal_path = os.path.join(expanduser("~"),".proxypos/tmp")
     config = json.loads(open(os.path.join(base_path,template_name+".tmp")).read())
     template_path = os.path.join(base_path,config['path'])
     css = os.path.join(template_path,config['files']['css']).decode("utf-8")
     html = os.path.join(template_path,config['files']['template']).decode("utf-8")
+    logo = os.path.join(template_path,config['files']['template']).decode("utf-8")
+
     query = 'esc="(.*)"'
     query = '<t\s* esc="(.*)"\s*\/>'
     template_buffer = open(html,"rb").read()
+    if config['files']['logo']!="":
+        template_buffer = template_buffer.replace("logo",logo)
     requested_values = re.findall(query,template_buffer)
     for requested_value in requested_values:
         query = '<t\s* esc="'+requested_value+'"\s*\/>'
@@ -76,8 +80,48 @@ def html_template(printer,template_name,base_path,receipt):
         f.write(template_buffer)
         f.close()
         files = commands.wkhtmltoimage(filename,css,config["width"].decode("utf-8"))
+        for f in sorted(files):
+            printer.printer.image(os.path.join(temporal_path,f))
+            printer._lineFeedCut(1,True)
     except OSError:
         print "Error: Cannot write to ticket.html"
+
+def html_template(printer,template_name,base_path,receipt):
+    temporal_path = os.path.join(expanduser("~"),".proxypos/tmp")
+    config = json.loads(open(os.path.join(base_path,template_name+".tmp")).read())
+    template_path = os.path.join(base_path,config['path'])
+    css = os.path.join(template_path,config['files']['css']).decode("utf-8")
+    html = os.path.join(template_path,config['files']['template']).decode("utf-8")
+    logo = os.path.join(template_path,config['files']['template']).decode("utf-8")
+
+    template = open(os.path.join(template_path,config['files']['template'])).read()
+    logo = os.path.join(template_path,config['files']['logo'])
+    if logo != "":
+        logo = "{{image('"+logo+"')}}"
+
+    template = template.replace("logo",logo)
+    tmp = Template(template)
+    #Make visible mapping functions inside the jinja2 templates
+    for func in mapping:
+        tmp.globals[func] = mapping[func](receipt)
+    for func in txt_function_mapping:
+        tmp.globals[func] = txt_function_mapping[func](printer)
+    tmp.globals['str'] = str
+
+    filename = os.path.join(temporal_path,"ticket.html")
+    new_file = tmp.render(logo=logo)
+    try:
+        f = open(filename,"wb")
+        f.write(new_file)
+        f.close()
+        files = commands.wkhtmltoimage(filename,css,config["width"].decode("utf-8"))
+        for f in sorted(files):
+            printer.printer.image(os.path.join(temporal_path,f))
+
+        printer._lineFeedCut(1,True)
+    except OSError:
+        print "Error: Cannot write to ticket.html"
+
 
 def text_template(printer,template_name,base_path,receipt):
     config = json.loads(open(os.path.join(base_path,template_name+".tmp")).read())

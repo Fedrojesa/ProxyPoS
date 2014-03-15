@@ -1,0 +1,23 @@
+#pos-ticket {
+    padding:10px 0px 0px 0px;
+    width: 412px;
+    font-family:sans-serif;
+    font-size: 22px;
+    background: #FFF;
+};
+
+#pos-ticket h1{
+    font-size: 22px;
+    font-width: bold;
+}
+#orderlines {
+    padding: 10px 0px 0px 0px;
+    font-size:22px;
+    font-weight:normal;
+}
+#footer {
+    padding: 10px 20px 0px
+    font-size:22px;
+    font-weight:bold;
+}
+

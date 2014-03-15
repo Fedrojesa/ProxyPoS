@@ -4,14 +4,52 @@
     </head>
     <body>
         <div id="pos-ticket">
-            <div id="header">
-                <t esc="order_name"  /><br/>
-                <t esc="company_name"  /><br/>
-                <t   esc="company_registry"/><br/>
-            </div>
-            <div id="products"></div>
-            <div id="resume"></div>
-            <div id="footer"></div>
+        <div id="header">
+            {# logo #}
+            {# <img src="{{ logo }}"/> #}
+        <br/>
+        {{ formatdate(date) }}<br/>
+        {{order_name}}<br/>
+        {{company_name}}<br/>
+        RFC : {{str(company_registry)}}<br/>
+        Telefono: {{str(company_phone)}}<br/>
+        Cajero: {{cashier}}<br/>
+        </div>
+        <div id="orderlines">
+        <table>
+        {% for line in orderlines %}
+        {% set left = ' '.join([str(line['quantity']),
+                                     line['unit_name'],
+                                     line['product_name']
+                                    ]).encode('utf-8')
+        %}
+        {% set right =  decimal(line['price_with_tax'])%}
+        <tr><td>{{left}}</td><td>{{right}}</td></tr>
+        {% endfor %}
+        </table>
+        </div>
+        <div id="resume">
+            Subtotal: {{ decimal(total_without_tax)}}<br/>
+            IVA: {{decimal(total_tax)}}<br/>
+            Descuento: {{decimal(total_discount)}}<br/>
+            TOTAL: $ {{decimal(total_with_tax)}}<br/>
+            {% for payment in paymentlines %}
+            {{payment['journal']}}  {{decimal(payment['amount'])}}<br/>
+            {% endfor %}<br/>
+
+            Cambio: $ {{decimal(change)}}<br/>
+            {% if client %}
+            Cliente: {{client['name'].encode('utf-8')}}<br/>
+            {% endif %}<br/>
+        </div>
+        <div id="footer">
+        {# Footer #}
+
+        Recibo sin validez fiscal.<br/>
+        Si requiere factura, solicitarla dentro de los proximos 5 dias. <br/>
+        {{str(company_website)}}<br/>
+        {{str(company_email)}}<br/>
+        </div>
         </div>
     </body>
 </html>
