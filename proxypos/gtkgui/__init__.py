@@ -13,7 +13,6 @@ from os.path import expanduser
 import logging
 
 from proxypos.gtkgui import WConfig
-#import WConfig
 
 # Init logger
 logger = logging.getLogger(__name__)

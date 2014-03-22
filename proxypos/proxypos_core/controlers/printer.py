@@ -32,7 +32,6 @@ import yaml
 import logging
 
 import ConfigParser
-from copy import deepcopy
 
 from escpos import printer
 import proxypos.templates as t
@@ -136,79 +135,10 @@ class device:
                  os.path.join(expanduser("~"),".proxypos/templates")]
 
         gen_receipt(self,template_name,receipt,paths)
-        #Commented, used only as a reference
-        #path = os.path.dirname(__file__)
-        #filename = path+"/logo/logo.jpg"
-
-        #self._printImgFromFile(filename)
-
-        #date = self._format_date(receipt['date'])
-        #self._bold(False)
-        #self._font('a')
-        #self._lineFeed(1)
-        #self._write("\n"+date+"\n", None, 'left')
-        #self._lineFeed(1)
-        #self._write(receipt['name'] + '\n', '', 'left')
-        #self._write(receipt['company']['name'] + '\n')
-        #self._write('RFC: ' + str(receipt['company']['company_registry']) + '\n')
-        #self._write(str(receipt['company']['contact_address']) + '\n')
-        #self._write('Telefono: ' + str(receipt['company']['phone']) + '\n')
-        #self._write('Cajero: ' + str(receipt['cashier']) + '\n')
-        # self._write('Tienda: ' + receipt['store']['name'])
-        #self._lineFeed(1)
-        #for line in receipt['orderlines']:
-        #    left = ' '.join([str(line['quantity']),
-        #                     line['unit_name'],
-        #                     line['product_name']
-        #                    ]).encode('utf-8')
-        #    right = self._decimal(line['price_with_tax'])
-        #    self._write(left, right)
-        #   self._lineFeed(1)
-
-        #self._lineFeed(2)
-        #self._write('Subtotal:', self._decimal(receipt['total_without_tax']) + '\n')
-        #self._write('IVA:', self._decimal(receipt['total_tax']) + '\n')
-        #self._write('Descuento:', self._decimal(receipt['total_discount']) + '\n')
-        #self._bold(True)
-        #self._font('a')
-        #self._write('TOTAL:', '$' + self._decimal(receipt['total_with_tax']) + '\n')
-
-        # Set space for display payment methods
-        #self._lineFeed(1)
-        #self._font('a')
-        #self._bold(False)
-        #paymentlines = receipt['paymentlines']
-        #if paymentlines:
-        #    for payment in paymentlines:
-        #        self._write(payment['journal'], self._decimal(payment['amount'])+'\n')
-
-        #    self._bold(True)
-        #    self._write('Cambio:', '$ ' + self._decimal(receipt['change'])+'\n')
-        #    self._bold(False)
-
-        # Write customer data
-        #client = receipt['client']
-        #if client:
-        #    self._lineFeed(4)
-        #    self._write('Cliente: ' + client['name'].encode('utf-8'))
-        #    self._lineFeed(1)
-        #    self._write((u'Teléfono: ' + client['phone']).encode('utf-8'))
-        #    self._lineFeed(1)
-        #    self._write('Dirección: ' + client['contact_address'].encode('utf-8'))
-        #    self._lineFeed(1)
-
-        ## Footer space
-        #self._write('Recibo sin validez fiscal.\n', '', 'left')
-        #self._write('Si requiere factura, solicitarla dentro de los proximos 5 dias','','left')
-        #self._write('\n'+str(receipt['company']['website'])+'\n','','left')
-        #self._write('\n'+str(receipt['company']['email'])+'\n','','left')
-        #self.printer.barcode(receipt['name'][6:],'EAN13',64,2,'BELOW','A')
-        #self._lineFeedCut(1, True)
-
 
     # Helper functions to facilitate printing
     def _format_date(self, date):
-        string = str(date['date']) + '/' + str(date['month']) + '/' + str(date['year']) + ' ' + str(date['hour']) + ':' + "%02d" % date['minute']
+        string = str(date['date']) + '/' + str(date['month']+1) + '/' + str(date['year']) + ' ' + str(date['hour']) + ':' + "%02d" % date['minute']
         return string
 
     def _write(self, string, rcolStr=None, align="left"):

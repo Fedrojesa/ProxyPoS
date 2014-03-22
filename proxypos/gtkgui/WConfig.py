@@ -2,15 +2,17 @@ import os
 import sys
 sys.path.append("..")
 
-#import templates
-#from templates import get_templates
-
 import gtk
 import ConfigParser
 from os.path import expanduser
 
+import logging
+
 from proxypos import templates
 from proxypos.templates import get_templates
+
+# Init logger
+logger = logging.getLogger(__name__)
 
 class POSTicketWidget(gtk.VBox):
     label = 'Ticket'
@@ -85,16 +87,14 @@ class POSTicketWidget(gtk.VBox):
 
     def toggled(self,widget, data=None):       
         if widget.get_active() == True:
-            current_format = data
             self.current_format = data
-            if current_format == "image":
+            if self.current_format == "image":
                 self.templates = self._return_templates(['image'])
                 self.current_template = self.config.get('Ticket','templateImage')
-            elif current_format == "text":
+            elif self.current_format == "text":
                 self.templates = self.templates = self._return_templates(['text'])
                 self.current_template = self.config.get('Ticket','templateText')
             buff = gtk.TextBuffer()
-            print self.__cmbTemplate
             self.__cmbTemplate.get_model().clear()
             for i,name in enumerate(list(self.templates)):
                 width = self.templates[name]['width']
@@ -211,7 +211,6 @@ class PrinterWidget(gtk.VBox):
 
     def toggled(self,widget, data=None):
         if widget.get_active() == True:
-            current_type = data
             self.__lblTypeConfig.set_label(self.ptype[data][0])
             config_value=','.join([self.config.get('Printer',value)
                                   for value in self.ptype[data][1]])
@@ -285,7 +284,6 @@ class WConfig(gtk.Window):
         for section in ['General','Printer','Ticket']:
             settings = self.widgets[section].save()
             for setting in settings:
-                print section, setting, settings[setting]
                 new_config.set(section,setting,settings[setting])
 
         #Save new config values
@@ -294,7 +292,7 @@ class WConfig(gtk.Window):
                 new_config.write(configfile)
             self.destroy()
         except Exception, ex:
-            print ex
+            logger.error(ex)
 
     def cancel(self, widget):
         self.destroy()
